@@ -40,6 +40,7 @@ class MyApp extends StatelessWidget {
       scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'Viettel Resource Monitor Demo',
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
+      builder: ViettelResourceMonitor.builder(),
       navigatorObservers: [ViettelResourceMonitor.instance.navigatorObserver],
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );

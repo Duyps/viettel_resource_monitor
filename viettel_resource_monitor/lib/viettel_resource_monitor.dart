@@ -11,6 +11,8 @@ import 'src/core/data_analyzer.dart';
 import 'src/models/resource_metric.dart';
 import 'dart:async';
 import 'src/models/resource_alert.dart';
+import 'package:flutter/widgets.dart';
+import 'src/ui/monitor_wrapper.dart';
 
 export 'src/viettel_resource_monitor_config.dart';
 export 'src/models/resource_metric.dart';
@@ -37,9 +39,13 @@ class ViettelResourceMonitor {
   final ViettelCpuTracker _cpuTracker = ViettelCpuTracker();
   
   final StreamController<ResourceAlert> _alertStreamController = StreamController<ResourceAlert>.broadcast();
+  final StreamController<ResourceMetric> _metricStreamController = StreamController<ResourceMetric>.broadcast();
 
   /// Stream of resource alerts for real-time Dashboard/UI rendering
   Stream<ResourceAlert> get alertStream => _alertStreamController.stream;
+  
+  /// Stream of live metrics (emitted every second)
+  Stream<ResourceMetric> get metricStream => _metricStreamController.stream;
 
   // The single instance
   static final ViettelResourceMonitor _instance = ViettelResourceMonitor._privateConstructor();
@@ -92,6 +98,9 @@ class ViettelResourceMonitor {
             dartHeapUsageMB: dartHeap,
           );
           sessionManager.addResourceMetric(metric);
+          if (!_metricStreamController.isClosed) {
+            _metricStreamController.add(metric);
+          }
 
           if (kDebugMode) {
             debugPrint('ViettelResourceMonitor: FPS=$fps, CPU=${cpu.toStringAsFixed(1)}%, RAM=${ram.toStringAsFixed(1)}MB, Pin=$battery%');
@@ -114,6 +123,21 @@ class ViettelResourceMonitor {
     // Connect observers to SessionManager
     navigatorObserver.onRouteChanged = (routeName) {
       sessionManager.startSession(routeName);
+    };
+  }
+
+  /// Wrap your MaterialApp with this builder to inject the floating Bubble
+  /// Example:
+  /// MaterialApp(
+  ///   builder: ViettelResourceMonitor.builder(),
+  ///   ...
+  /// )
+  static Widget Function(BuildContext, Widget?) builder() {
+    return (context, child) {
+      if (child == null) return const SizedBox.shrink();
+      if (!instance.isInitialized || instance._config?.showBubble != true) return child;
+      
+      return ViettelMonitorWrapper(child: child);
     };
   }
 

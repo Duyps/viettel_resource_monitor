@@ -23,6 +23,9 @@ class ViettelResourceMonitorConfig {
   /// Whether to enable Network request tracking.
   final bool enableNetwork;
 
+  /// Whether to show the floating Bubble UI.
+  final bool showBubble;
+
   final ViettelAlertConfig alertConfig;
   final void Function(ResourceAlert alert)? onAlert;
 
@@ -30,6 +33,7 @@ class ViettelResourceMonitorConfig {
   const ViettelResourceMonitorConfig({
     this.enableFPS = true,
     this.enableNetwork = true,
+    this.showBubble = true,
     this.alertConfig = const ViettelAlertConfig(),
     this.onAlert,
   });
