@@ -31,11 +31,6 @@ class ViettelFpsTracker {
 
     final currentScreen = navigatorObserver.currentRouteName ?? 'Unknown';
 
-    // Log warning if FPS drops below 40
-    if (fps < 40 && fps > 0) { // Check > 0 to avoid logging when app is idle/background
-      debugPrint('⚠️ [WARNING] Màn hình bị Jank! FPS giảm xuống $fps trên màn hình: $currentScreen');
-    }
-
     onReportMetric?.call(fps);
   }
 }

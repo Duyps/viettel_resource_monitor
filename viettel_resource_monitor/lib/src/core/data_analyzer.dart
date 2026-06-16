@@ -97,10 +97,10 @@ class ViettelDataAnalyzer {
     }
 
     // You can also emit a sessionSummary alert here if needed
-    if (kDebugMode) {
-      debugPrint(
-        'ViettelResourceMonitor: [Summary ${session.screenName}] AvgFPS: ${avgFps.toStringAsFixed(1)}, PeakRAM: ${maxRam.toStringAsFixed(1)}MB, PeakCPU: ${maxCpu.toStringAsFixed(1)}%',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     'ViettelResourceMonitor: [Summary ${session.screenName}] AvgFPS: ${avgFps.toStringAsFixed(1)}, PeakRAM: ${maxRam.toStringAsFixed(1)}MB, PeakCPU: ${maxCpu.toStringAsFixed(1)}%',
+    //   );
+    // }
   }
 }

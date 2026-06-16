@@ -105,9 +105,9 @@ class ViettelResourceMonitor {
             _metricStreamController.add(metric);
           }
 
-          if (kDebugMode) {
-            debugPrint('ViettelResourceMonitor: FPS=$fps, CPU=${cpu.toStringAsFixed(1)}%, RAM=${ram.toStringAsFixed(1)}MB, Pin=$battery%');
-          }
+          // if (kDebugMode) {
+          //   debugPrint('ViettelResourceMonitor: FPS=$fps, CPU=${cpu.toStringAsFixed(1)}%, RAM=${ram.toStringAsFixed(1)}MB, Pin=$battery%');
+          // }
         }
       };
       _fpsTracker!.start();

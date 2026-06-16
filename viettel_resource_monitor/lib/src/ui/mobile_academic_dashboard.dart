@@ -56,18 +56,6 @@ class _MobileAcademicDashboardState extends State<MobileAcademicDashboard> with 
     final saved = manager.getSavedSessions();
     final current = manager.currentSession;
     
-    debugPrint('ViettelResourceMonitor: --- DASHBOARD REFRESHING ---');
-    debugPrint('ViettelResourceMonitor: [Dashboard] Nạp dữ liệu từ Hive và RAM...');
-    debugPrint('ViettelResourceMonitor: [Dashboard] Tổng số Session đã lưu (Hive): ${saved.length}');
-    
-    if (current != null) {
-      debugPrint('ViettelResourceMonitor: [Dashboard] Session hiện tại đang chạy: ${current.screenName}');
-      debugPrint('ViettelResourceMonitor: [Dashboard] Số liệu thu thập được từ Session hiện tại: ${current.resourceMetrics.length} metrics, ${current.networkMetrics.length} requests');
-    } else {
-      debugPrint('ViettelResourceMonitor: [Dashboard] Không có Session nào đang chạy.');
-    }
-    debugPrint('ViettelResourceMonitor: --------------------------------');
-
     setState(() {
       _allSessions = [...saved];
       if (current != null) {
@@ -78,7 +66,6 @@ class _MobileAcademicDashboardState extends State<MobileAcademicDashboard> with 
   }
 
   void _clearData() async {
-    debugPrint('ViettelResourceMonitor: [Dashboard] Người dùng bấm Xóa dữ liệu cũ (Clear Hive Data).');
     await ViettelResourceMonitor.instance.sessionManager.clearAllData();
     setState(() {
       _alerts.clear();
@@ -91,7 +78,6 @@ class _MobileAcademicDashboardState extends State<MobileAcademicDashboard> with 
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('ViettelResourceMonitor: [Dashboard] Tiến hành Render giao diện (Build UI) với ${_allSessions.length} sessions và ${_alerts.length} cảnh báo.');
     return Theme(
       data: ThemeData.light().copyWith(
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),

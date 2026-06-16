@@ -31,7 +31,7 @@ class ViettelNavigatorObserver extends NavigatorObserver {
     if (_currentRouteName == routeName) return;
 
     // TODO: Connect to Session Manager to end previous session and start a new one.
-    debugPrint('ViettelResourceMonitor: Transitioned to screen [$routeName]');
+    // debugPrint('ViettelResourceMonitor: Transitioned to screen [$routeName]');
     
     _currentRouteName = routeName;
     onRouteChanged?.call(routeName);

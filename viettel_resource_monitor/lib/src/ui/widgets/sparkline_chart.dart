@@ -31,7 +31,7 @@ class SparklineChart extends StatelessWidget {
       height: height + 30, // Extra space for labels
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -42,7 +42,7 @@ class SparklineChart extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
               ),
               Text(
                 '${currentValue.toStringAsFixed(1)} $unit',
@@ -113,8 +113,8 @@ class _SparklinePainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          color.withOpacity(0.3),
-          color.withOpacity(0.0),
+          color.withValues(alpha: 0.3),
+          color.withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
