@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../models/screen_session.dart';
 import '../widgets/light_line_chart.dart';
@@ -6,7 +5,7 @@ import '../widgets/light_line_chart.dart';
 class FpsTab extends StatefulWidget {
   final List<ScreenSession> allSessions;
 
-  const FpsTab({Key? key, required this.allSessions}) : super(key: key);
+  const FpsTab({super.key, required this.allSessions});
 
   @override
   State<FpsTab> createState() => _FpsTabState();
@@ -190,7 +189,7 @@ class _FpsTabState extends State<FpsTab> {
                     },
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),
@@ -292,9 +291,9 @@ class _FpsTabState extends State<FpsTab> {
                   return TableRow(
                     children: [
                       _buildTableCell(data.screenName, badgeColor: routeColor),
-                      _buildTableCell('${data.avgFps.toStringAsFixed(1)}', isBold: true),
+                      _buildTableCell(data.avgFps.toStringAsFixed(1), isBold: true),
                       _buildTableCell(
-                        '${data.minFps.toStringAsFixed(0)}',
+                        data.minFps.toStringAsFixed(0),
                         color: isSevereJank ? viettelRed : null,
                         isBold: isSevereJank,
                       ),
@@ -306,7 +305,7 @@ class _FpsTabState extends State<FpsTab> {
                       ),
                     ],
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

@@ -10,7 +10,7 @@ class SparklineChart extends StatelessWidget {
   final String unit;
 
   const SparklineChart({
-    Key? key,
+    super.key,
     required this.data,
     required this.color,
     this.height = 60,
@@ -18,7 +18,7 @@ class SparklineChart extends StatelessWidget {
     required this.maxValue,
     required this.label,
     required this.unit,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

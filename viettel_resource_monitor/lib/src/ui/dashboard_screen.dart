@@ -2,11 +2,10 @@ import 'dart:ui';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../viettel_resource_monitor.dart';
-import '../models/resource_alert.dart';
 import 'widgets/sparkline_chart.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../viettel_resource_monitor.dart';
-import '../models/screen_session.dart';
-import '../models/resource_alert.dart';
 import 'tabs/ram_cpu_tab.dart';
 import 'tabs/fps_tab.dart';
 import 'tabs/network_tab.dart';
 import 'tabs/alerts_tab.dart';
 
 class MobileAcademicDashboard extends StatefulWidget {
-  const MobileAcademicDashboard({Key? key}) : super(key: key);
+  const MobileAcademicDashboard({super.key});
 
   @override
   State<MobileAcademicDashboard> createState() => _MobileAcademicDashboardState();

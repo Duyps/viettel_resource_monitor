@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import '../models/screen_session.dart';
 import '../models/resource_metric.dart';
 import '../models/network_metric.dart';

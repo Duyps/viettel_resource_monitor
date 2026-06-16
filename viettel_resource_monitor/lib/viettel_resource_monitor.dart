@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'src/viettel_resource_monitor_config.dart';
 import 'src/observers/viettel_navigator_observer.dart';
 import 'src/trackers/fps_tracker.dart';

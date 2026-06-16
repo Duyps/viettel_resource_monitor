@@ -4,30 +4,28 @@ import 'package:viettel_resource_monitor/viettel_resource_monitor.dart';
 import 'package:http/http.dart' as http;
 import 'dart:math';
 
-final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
-    GlobalKey<ScaffoldMessengerState>();
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Khởi tạo hệ thống giám sát
   await ViettelResourceMonitor.instance.init(
     ViettelResourceMonitorConfig(
       enableFPS: true,
       enableNetwork: true,
       alertConfig: const ViettelAlertConfig(
-        maxMemoryMB: 200, // Thấp để dễ test Memory Leak
-        maxNetworkDurationMs: 1500, // Thấp để dễ test Mạng chậm
+        maxMemoryMB: 300, 
+        maxNetworkDurationMs: 1500,
         minFps: 40,
         maxCpuPercentage: 50,
       ),
       onAlert: (alert) {
-        debugPrint('\n⚠️ [VIETTEL ALERT TRIGGERED] ⚠️');
-        debugPrint('Nội dung: ${alert.message}');
+        debugPrint('\n⚠️ [VIETTEL THRESHOLD ALERT] ${alert.message}');
 
         // Trích xuất báo cáo phân tích nhanh (giống trên Dashboard) khi có lỗi xảy ra
-        final sessions = ViettelResourceMonitor.instance.sessionManager
-            .getSavedSessions();
-        final currentSession =
-            ViettelResourceMonitor.instance.sessionManager.currentSession;
+        final sessions = ViettelResourceMonitor.instance.sessionManager.getSavedSessions();
+        final currentSession = ViettelResourceMonitor.instance.sessionManager.currentSession;
         final allSessions = [...sessions];
         if (currentSession != null) allSessions.add(currentSession);
 
@@ -66,9 +64,7 @@ void main() async {
         );
         if (globalMaxRam == 0) globalMaxRam = 1;
 
-        debugPrint(
-          '\n════════════════════ [BÁO CÁO NHANH RAM/CPU] ════════════════════',
-        );
+        debugPrint('\n════════════════════ [BÁO CÁO NHANH HỆ THỐNG] ════════════════════');
         summaryMap.forEach((name, data) {
           final double ramRatio = data[0] / globalMaxRam;
           final int barLength = (ramRatio * 20).round();
@@ -76,16 +72,10 @@ void main() async {
 
           debugPrint(' 📱 Màn hình: ${name.padRight(15)}');
           debugPrint('    RAM Đỉnh:   [$bar] ${data[0].toStringAsFixed(1)} MB');
-          debugPrint(
-            '    CPU:         Đỉnh: ${data[1].toStringAsFixed(1)}% | Trung bình: ${data[2].toStringAsFixed(1)}%',
-          );
-          debugPrint(
-            '  -------------------------------------------------------------------',
-          );
+          debugPrint('    CPU:         Đỉnh: ${data[1].toStringAsFixed(1)}% | Trung bình: ${data[2].toStringAsFixed(1)}%');
+          debugPrint('  -------------------------------------------------------------------');
         });
-        debugPrint(
-          '═════════════════════════════════════════════════════════════════════\n',
-        );
+        debugPrint('═════════════════════════════════════════════════════════════════════\n');
       },
     ),
   );
@@ -99,7 +89,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       scaffoldMessengerKey: scaffoldMessengerKey,
-      title: 'Viettel Resource Monitor Demo',
+      title: 'Viettel Diagnosis Test Suite',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFEE0000)),
         useMaterial3: true,
@@ -119,12 +109,8 @@ class TestSuiteHome extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Viettel Monitor - Test Suite',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.white,
-          ),
+          'Hệ Thống Kiểm Thử Chẩn Đoán',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
         ),
         backgroundColor: const Color(0xFFEE0000),
       ),
@@ -132,41 +118,59 @@ class TestSuiteHome extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           const Text(
-            'Chọn một kịch bản để kiểm thử các cảnh báo tài nguyên của hệ thống:',
-            style: TextStyle(fontSize: 16),
+            'Hãy chọn các kịch bản dưới đây để tạo ra dữ liệu giả lập. Sau đó mở Tab "Chẩn Đoán" để xem AI báo cáo chính xác như mong đợi không.',
+            style: TextStyle(fontSize: 14, color: Colors.black87),
           ),
           const SizedBox(height: 24),
+
           _buildTestCard(
             context,
-            title: 'Test Jank & Drop FPS',
-            icon: Icons.speed,
-            color: Colors.orange,
-            route: '/test_fps',
-            builder: (ctx) => const FpsTestScreen(),
+            title: '1. Test Chạy Ổn Định (Normal)',
+            subtitle: 'Kỳ vọng: Không có cảnh báo nào (Xanh lá).',
+            icon: Icons.check_circle,
+            color: Colors.green,
+            route: '/test_normal',
+            builder: (ctx) => const NormalTestScreen(),
           ),
+          
           _buildTestCard(
             context,
-            title: 'Test Memory Leak (RAM)',
+            title: '2. Test Rò Rỉ Bộ Nhớ (Memory Leak)',
+            subtitle: 'Kỳ vọng: Báo cáo "Nghi ngờ Rò rỉ bộ nhớ".\nHướng dẫn: Hãy vào màn hình này, bấm nút "Nhai RAM", sau đó BẤM BACK ra ngoài. Lặp lại thao tác này 3 lần.',
             icon: Icons.memory,
             color: Colors.blue,
-            route: '/test_ram',
-            builder: (ctx) => const MemoryTestScreen(),
+            route: '/test_leak',
+            builder: (ctx) => const MemoryLeakTestScreen(),
           ),
+
           _buildTestCard(
             context,
-            title: 'Test Tải CPU Cao',
-            icon: Icons.developer_board,
+            title: '3. Test Nghẽn Luồng Chính (Main Thread)',
+            subtitle: 'Kỳ vọng: Báo cáo "Nghẽn Luồng Chính".\nHướng dẫn: Vào màn hình này, bấm nút chạy vòng lặp nặng để CPU vượt 15% và FPS tụt dốc.',
+            icon: Icons.speed,
+            color: Colors.orange,
+            route: '/test_main_thread',
+            builder: (ctx) => const MainThreadBlockScreen(),
+          ),
+
+          _buildTestCard(
+            context,
+            title: '4. Test Quá Tải GPU (UI Overdraw)',
+            subtitle: 'Kỳ vọng: Báo cáo "Quá tải Render Giao diện".\nHướng dẫn: Màn hình này vẽ 1000 Widget mờ chồng lên nhau khiến FPS tụt nhưng CPU vẫn rất thấp.',
+            icon: Icons.layers,
             color: Colors.purple,
-            route: '/test_cpu',
-            builder: (ctx) => const CpuTestScreen(),
+            route: '/test_overdraw',
+            builder: (ctx) => const UiOverdrawScreen(),
           ),
+
           _buildTestCard(
             context,
-            title: 'Test Mạng Chậm (API)',
+            title: '5. Test Nghẽn Mạng (Slow API)',
+            subtitle: 'Kỳ vọng: Báo cáo "Nút thắt cổ chai API".\nHướng dẫn: Bấm nút gọi API chậm (mất 3 giây).',
             icon: Icons.network_check,
-            color: Colors.green,
+            color: Colors.brown,
             route: '/test_network',
-            builder: (ctx) => const NetworkTestScreen(),
+            builder: (ctx) => const SlowNetworkScreen(),
           ),
         ],
       ),
@@ -176,6 +180,7 @@ class TestSuiteHome extends StatelessWidget {
   Widget _buildTestCard(
     BuildContext context, {
     required String title,
+    required String subtitle,
     required IconData icon,
     required Color color,
     required String route,
@@ -184,15 +189,9 @@ class TestSuiteHome extends StatelessWidget {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          // ĐÃ FIX: Thay thế .withOpacity lỗi thời sang .withValues chuẩn mã nguồn hiện đại
-          backgroundColor: color.withValues(alpha: 0.2),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -201,6 +200,34 @@ class TestSuiteHome extends StatelessWidget {
             ),
           );
         },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                backgroundColor: color.withValues(alpha: 0.15),
+                radius: 24,
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 6),
+                    Text(subtitle, style: const TextStyle(fontSize: 13, color: Colors.black54, height: 1.4)),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 8.0),
+                child: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -208,54 +235,40 @@ class TestSuiteHome extends StatelessWidget {
 
 // ================= TEST SCREENS =================
 
-class FpsTestScreen extends StatelessWidget {
-  const FpsTestScreen({super.key});
+// 1. NORMAL SCREEN
+class NormalTestScreen extends StatelessWidget {
+  const NormalTestScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('FPS Jank Test')),
-      body: ListView.builder(
-        itemCount: 1000,
-        itemBuilder: (context, index) {
-          if (index % 5 == 0) {
-            for (
-              var i = 0;
-              i < 800000;
-              i++
-            ) {} // Giả lập nghẽn luồng UI vẽ đồng bộ
-          }
-          return ListTile(
-            leading: const Icon(Icons.warning, color: Colors.orange),
-            title: Text('Heavy Item $index'),
-          );
-        },
+      appBar: AppBar(title: const Text('Màn hình Ổn định')),
+      body: const Center(
+        child: Text('Màn hình này siêu mượt, 60 FPS, không tốn RAM/CPU.'),
       ),
     );
   }
 }
 
-class MemoryTestScreen extends StatefulWidget {
-  const MemoryTestScreen({super.key});
+// 2. MEMORY LEAK SCREEN
+// Biến toàn cục để cố tình giả lập việc quên xoá bộ nhớ (Leak)
+final List<String> globalLeakedMemory = [];
+
+class MemoryLeakTestScreen extends StatefulWidget {
+  const MemoryLeakTestScreen({super.key});
 
   @override
-  State<MemoryTestScreen> createState() => _MemoryTestScreenState();
+  State<MemoryLeakTestScreen> createState() => _MemoryLeakTestScreenState();
 }
 
-class _MemoryTestScreenState extends State<MemoryTestScreen> {
-  final List<String> _leakedMemory = [];
-
+class _MemoryLeakTestScreenState extends State<MemoryLeakTestScreen> {
   void _leakMemory() {
     setState(() {
-      for (int i = 0; i < 500000; i++) {
-        _leakedMemory.add(
-          'This is a very long string used to consume memory quickly to test the Viettel Resource Monitor Memory tracking feature... $i',
-        );
+      for (int i = 0; i < 600000; i++) {
+        globalLeakedMemory.add('This is a massive string to intentionally leak memory and crash the app eventually... $i');
       }
     });
-    debugPrint(
-      'ViettelResourceMonitor: Appended 500,000 strings to memory list.',
-    );
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã nhồi thêm RAM! Hãy bấm Back ra ngoài rồi vào lại đây tiếp!')));
   }
 
   @override
@@ -263,156 +276,165 @@ class _MemoryTestScreenState extends State<MemoryTestScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Memory Leak Test')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Objects in Memory: ${_leakedMemory.length}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _leakMemory,
-              icon: const Icon(Icons.memory),
-              label: const Text('Allocate +500,000 Objects'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
+        child: ElevatedButton.icon(
+          onPressed: _leakMemory,
+          icon: const Icon(Icons.memory),
+          label: const Text('Nhai thêm ~15MB RAM (Leak)'),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
         ),
       ),
     );
   }
 }
 
-class CpuTestScreen extends StatefulWidget {
-  const CpuTestScreen({super.key});
+// 3. MAIN THREAD BLOCK SCREEN
+class MainThreadBlockScreen extends StatefulWidget {
+  const MainThreadBlockScreen({super.key});
 
   @override
-  State<CpuTestScreen> createState() => _CpuTestScreenState();
+  State<MainThreadBlockScreen> createState() => _MainThreadBlockScreenState();
 }
 
-class _CpuTestScreenState extends State<CpuTestScreen> {
+class _MainThreadBlockScreenState extends State<MainThreadBlockScreen> {
   bool _isCalculating = false;
 
-  void _startHeavyComputation() async {
+  void _blockThread() async {
     setState(() => _isCalculating = true);
-    debugPrint('ViettelResourceMonitor: Starting heavy CPU computation...');
-
+    
+    // Đợi UI update chữ "Đang tính toán" rồi mới block
     await Future.delayed(const Duration(milliseconds: 100));
 
+    // Cố tình chạy vòng lặp chặn đứng Main Thread
     double result = 0.0;
-    for (int i = 0; i < 20000000; i++) {
-      result += sin(i) * cos(i);
+    final endTime = DateTime.now().add(const Duration(seconds: 3));
+    while (DateTime.now().isBefore(endTime)) {
+      result += sin(result) * cos(result) + 1;
     }
 
-    debugPrint('ViettelResourceMonitor: CPU computation done. Result: $result');
-    if (mounted) setState(() => _isCalculating = false);
+    if (mounted) {
+      setState(() => _isCalculating = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vòng lặp kết thúc. FPS đã tụt mạnh và CPU đã tăng cao.')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('CPU Overload Test')),
+      appBar: AppBar(title: const Text('Main Thread Block')),
       body: Center(
         child: _isCalculating
-            ? const CircularProgressIndicator(color: Colors.purple)
+            ? const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Giao diện đang bị treo cứng (Jank) vì Main Thread đang bận...'),
+                ],
+              )
             : ElevatedButton.icon(
-                onPressed: _startHeavyComputation,
+                onPressed: _blockThread,
                 icon: const Icon(Icons.calculate),
-                label: const Text('Chạy vòng lặp tính toán nặng'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  foregroundColor: Colors.white,
-                ),
+                label: const Text('Chạy vòng lặp khoá luồng (3s)'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
               ),
       ),
     );
   }
 }
 
-class NetworkTestScreen extends StatefulWidget {
-  const NetworkTestScreen({super.key});
+// 4. UI OVERDRAW SCREEN
+class UiOverdrawScreen extends StatefulWidget {
+  const UiOverdrawScreen({super.key});
 
   @override
-  State<NetworkTestScreen> createState() => _NetworkTestScreenState();
+  State<UiOverdrawScreen> createState() => _UiOverdrawScreenState();
 }
 
-class _NetworkTestScreenState extends State<NetworkTestScreen> {
-  String _status = 'Nhấn nút để gọi API...';
+class _UiOverdrawScreenState extends State<UiOverdrawScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
 
-  // 1. Kịch bản API chạy nhanh bình thường
-  Future<void> _fetchFastApi() async {
-    setState(() => _status = 'Đang gọi API nhanh...');
-    try {
-      final res = await http.get(
-        Uri.parse('https://jsonplaceholder.typicode.com/posts/1'),
-      );
-      if (mounted) {
-        setState(
-          () => _status = 'API Nhanh (200 OK): ${res.body.length} bytes',
-        );
-      }
-    } catch (e) {
-      if (mounted) setState(() => _status = 'Lỗi kết nối API nhanh: $e');
-    }
+  @override
+  void initState() {
+    super.initState();
+    // Tạo animation xoay liên tục để bắt Flutter phải vẽ lại (Repaint) liên tục
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
   }
 
-  // 2. Kịch bản API bị trễ / phản hồi chậm (ĐÃ THÊM BỔ SUNG ĐỂ SỬA LỖI)
-  Future<void> _fetchSlowApi() async {
-    setState(() => _status = 'Đang gọi API chậm (Giả lập delay)...');
-    try {
-      // Gọi qua endpoint trì hoãn của httpbin để test tính năng đo thời gian phản hồi mạng (Mục 4)
-      final res = await http.get(Uri.parse('https://httpbin.org/delay/3'));
-      if (mounted) {
-        setState(() => _status = 'API Chậm (200 OK): ${res.body.length} bytes');
-      }
-    } catch (e) {
-      if (mounted) setState(() => _status = 'Lỗi kết nối API chậm: $e');
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
-  // 3. Khối hàm dựng giao diện (Đã tách biệt độc lập, không còn bị lồng trong hàm xử lý)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Network API Latency Test')),
+      appBar: AppBar(title: const Text('UI Overdraw Test')),
+      body: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return ListView.builder(
+            itemCount: 500, // Vẽ 500 phần tử mờ chồng chéo lên nhau
+            itemBuilder: (context, index) {
+              return Transform.rotate(
+                angle: _controller.value * 2 * pi,
+                child: Opacity(
+                  opacity: 0.1, // Opacity làm GPU kiệt sức
+                  child: Container(
+                    height: 100,
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.purple,
+                      boxShadow: const [BoxShadow(color: Colors.black, blurRadius: 20)], // Shadow nặng
+                    ),
+                    child: const Center(child: Text('GPU Crying...')),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+// 5. SLOW NETWORK SCREEN
+class SlowNetworkScreen extends StatefulWidget {
+  const SlowNetworkScreen({super.key});
+
+  @override
+  State<SlowNetworkScreen> createState() => _SlowNetworkScreenState();
+}
+
+class _SlowNetworkScreenState extends State<SlowNetworkScreen> {
+  String _status = 'Nhấn nút để gọi API...';
+
+  Future<void> _fetchSlowApi() async {
+    setState(() => _status = 'Đang chờ máy chủ phản hồi (3 giây)...');
+    try {
+      final res = await http.get(Uri.parse('https://httpbin.org/delay/3'));
+      if (mounted) setState(() => _status = 'Thành công. Kích thước: ${res.body.length} bytes');
+    } catch (e) {
+      if (mounted) setState(() => _status = 'Lỗi: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Slow API Test')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                _status,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
+            Text(_status, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: _fetchFastApi,
-              icon: const Icon(Icons.flash_on),
-              label: const Text('Gọi API Nhanh (< 500ms)'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _fetchSlowApi,
               icon: const Icon(Icons.hourglass_bottom),
-              label: const Text('Gọi API Chậm (> 3000ms)'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-              ),
+              label: const Text('Gọi API httpbin.org/delay/3'),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.brown, foregroundColor: Colors.white),
             ),
           ],
         ),

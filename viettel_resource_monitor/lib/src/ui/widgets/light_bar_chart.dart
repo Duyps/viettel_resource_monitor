@@ -8,13 +8,13 @@ class LightBarChart extends StatelessWidget {
   final double height;
 
   const LightBarChart({
-    Key? key,
+    super.key,
     required this.labels,
     required this.values,
     required this.unit,
     this.color = const Color(0xFFEE0000), // Viettel Red
     this.height = 150,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

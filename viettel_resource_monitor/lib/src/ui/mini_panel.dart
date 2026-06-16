@@ -1,12 +1,12 @@
 import 'dart:async';
-import 'dart:ui'; // Cần thiết để sử dụng FontFeature.tabularFigures()
+// Cần thiết để sử dụng FontFeature.tabularFigures()
 import 'package:flutter/material.dart';
 import '../../viettel_resource_monitor.dart';
 import 'mobile_academic_dashboard.dart';
 import 'dart:math';
 
 class ViettelMiniPanel extends StatefulWidget {
-  const ViettelMiniPanel({Key? key}) : super(key: key);
+  const ViettelMiniPanel({super.key});
 
   @override
   State<ViettelMiniPanel> createState() => _ViettelMiniPanelState();

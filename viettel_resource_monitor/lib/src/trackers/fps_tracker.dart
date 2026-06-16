@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/foundation.dart';
 import '../observers/viettel_navigator_observer.dart';
 
 class ViettelFpsTracker {

@@ -1,11 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../models/resource_alert.dart';
 
 class AlertsTab extends StatefulWidget {
   final List<ResourceAlert> alerts;
 
-  const AlertsTab({Key? key, required this.alerts}) : super(key: key);
+  const AlertsTab({super.key, required this.alerts});
 
   @override
   State<AlertsTab> createState() => _AlertsTabState();

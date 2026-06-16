@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 class LightLineChart extends StatelessWidget {
   final Map<String, List<double>> dataMap;
@@ -8,12 +7,12 @@ class LightLineChart extends StatelessWidget {
   final double height;
 
   const LightLineChart({
-    Key? key,
+    super.key,
     required this.dataMap,
     required this.colors,
     required this.threshold,
     this.height = 250,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

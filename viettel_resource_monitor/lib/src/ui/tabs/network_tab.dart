@@ -1,11 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../models/screen_session.dart';
 
 class NetworkTab extends StatelessWidget {
   final List<ScreenSession> allSessions;
 
-  const NetworkTab({Key? key, required this.allSessions}) : super(key: key);
+  const NetworkTab({super.key, required this.allSessions});
 
   @override
   Widget build(BuildContext context) {
@@ -84,8 +83,9 @@ class NetworkTab extends StatelessWidget {
                 final isError = req.statusCode >= 400;
                 
                 Color statusColor = Colors.green;
-                if (isError) statusColor = viettelRed;
-                else if (isSlow) statusColor = Colors.orange;
+                if (isError) {
+                  statusColor = viettelRed;
+                } else if (isSlow) statusColor = Colors.orange;
 
                 return Padding(
                   padding: const EdgeInsets.all(12),

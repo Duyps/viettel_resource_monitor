@@ -4,7 +4,7 @@ import 'mini_panel.dart';
 class ViettelMonitorWrapper extends StatelessWidget {
   final Widget child;
 
-  const ViettelMonitorWrapper({Key? key, required this.child}) : super(key: key);
+  const ViettelMonitorWrapper({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

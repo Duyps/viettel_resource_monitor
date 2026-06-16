@@ -1,11 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../models/screen_session.dart';
 
 class RamCpuTab extends StatelessWidget {
   final List<ScreenSession> allSessions;
 
-  const RamCpuTab({Key? key, required this.allSessions}) : super(key: key);
+  const RamCpuTab({super.key, required this.allSessions});
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +159,7 @@ class RamCpuTab extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '${data.maxRam.toStringAsFixed(0)}',
+                                  data.maxRam.toStringAsFixed(0),
                                   style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade700, fontFeatures: const [FontFeature.tabularFigures()]),
                                 ),
                               ],
@@ -196,7 +195,7 @@ class RamCpuTab extends StatelessWidget {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),
@@ -246,25 +245,25 @@ class RamCpuTab extends StatelessWidget {
                     children: [
                       _buildTableCell(data.screenName),
                       _buildTableCell(
-                        '${data.maxRam.toStringAsFixed(0)}',
+                        data.maxRam.toStringAsFixed(0),
                         isBold: true,
                         color: viettelRed,
                         suffix: ' MB',
                       ),
                       _buildTableCell(
-                        '${data.maxCpu.toStringAsFixed(1)}',
+                        data.maxCpu.toStringAsFixed(1),
                         isBold: true,
                         color: cpuBlue,
                         suffix: ' %',
                       ),
                       _buildTableCell(
-                        '${data.avgCpu.toStringAsFixed(1)}',
+                        data.avgCpu.toStringAsFixed(1),
                         color: Colors.grey.shade700,
                         suffix: ' %',
                       ),
                     ],
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
