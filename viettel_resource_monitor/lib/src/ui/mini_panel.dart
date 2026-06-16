@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../viettel_resource_monitor.dart';
-import 'dashboard_screen.dart';
+import 'mobile_academic_dashboard.dart';
 import 'dart:math';
 
 class ViettelMiniPanel extends StatefulWidget {
@@ -65,7 +65,13 @@ class _ViettelMiniPanelState extends State<ViettelMiniPanel> {
       context: navState.context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => const DashboardScreen(),
+      builder: (ctx) => const FractionallySizedBox(
+        heightFactor: 0.95,
+        child: ClipRRect(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          child: MobileAcademicDashboard(),
+        ),
+      ),
     );
   }
 
@@ -93,15 +99,15 @@ class _ViettelMiniPanelState extends State<ViettelMiniPanel> {
             duration: const Duration(milliseconds: 300),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E).withOpacity(0.85),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: _isAlerting ? Colors.redAccent : const Color(0xFF00E5FF),
+                color: _isAlerting ? const Color(0xFFEE0000) : Colors.grey.shade300,
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _isAlerting ? Colors.redAccent.withOpacity(0.5) : const Color(0xFF00E5FF).withOpacity(0.3),
+                  color: _isAlerting ? const Color(0xFFEE0000).withOpacity(0.3) : Colors.black.withOpacity(0.1),
                   blurRadius: 10,
                   spreadRadius: 2,
                 )
@@ -110,18 +116,18 @@ class _ViettelMiniPanelState extends State<ViettelMiniPanel> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.speed, color: Color(0xFF00E5FF), size: 16),
+                Icon(Icons.speed, color: _isAlerting ? const Color(0xFFEE0000) : Colors.green, size: 16),
                 const SizedBox(width: 4),
                 Text(
                   '${_fps.toStringAsFixed(0)} FPS',
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.memory, color: Color(0xFFB388FF), size: 16),
+                const Icon(Icons.memory, color: Colors.blueAccent, size: 16),
                 const SizedBox(width: 4),
                 Text(
                   '${_ram.toStringAsFixed(0)} MB',
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ],
             ),

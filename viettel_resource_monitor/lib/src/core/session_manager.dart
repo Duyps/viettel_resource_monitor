@@ -7,6 +7,7 @@ import 'data_analyzer.dart';
 
 class ViettelSessionManager {
   ScreenSession? _currentSession;
+  ScreenSession? get currentSession => _currentSession;
   final ViettelDbHelper _dbHelper = ViettelDbHelper();
   ViettelDataAnalyzer? analyzer;
 
@@ -45,5 +46,9 @@ class ViettelSessionManager {
 
   List<ScreenSession> getSavedSessions() {
     return _dbHelper.getAllSessions();
+  }
+
+  Future<void> clearAllData() async {
+    await _dbHelper.clearAll();
   }
 }

@@ -76,6 +76,9 @@ class ViettelResourceMonitor {
 
     debugPrint('ViettelResourceMonitor initialized with FPS tracking: ${_config!.enableFPS}, Network tracking: ${_config!.enableNetwork}');
     
+    // Start an initial session in case the app doesn't push a named route immediately
+    sessionManager.startSession('InitialSession');
+
     _setupMonitors();
   }
 

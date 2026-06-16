@@ -27,4 +27,16 @@ class NetworkMetric {
     'responseSizeBytes': responseSizeBytes,
     'timestamp': timestamp.toIso8601String(),
   };
+
+  factory NetworkMetric.fromJson(Map<String, dynamic> json) {
+    return NetworkMetric(
+      url: json['url'] as String,
+      method: json['method'] as String,
+      statusCode: json['statusCode'] as int,
+      durationMilliseconds: json['durationMilliseconds'] as int,
+      requestSizeBytes: json['requestSizeBytes'] as int,
+      responseSizeBytes: json['responseSizeBytes'] as int,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 }

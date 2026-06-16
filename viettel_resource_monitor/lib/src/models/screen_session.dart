@@ -43,7 +43,21 @@ class ScreenSession {
     if (json['endTime'] != null) {
       session.endTime = DateTime.parse(json['endTime'] as String);
     }
-    // We skip deep parsing of metrics for simplicity in this report unless needed
+    
+    if (json['resourceMetrics'] != null) {
+      final rmList = json['resourceMetrics'] as List;
+      for (var rm in rmList) {
+        session.resourceMetrics.add(ResourceMetric.fromJson(rm));
+      }
+    }
+    
+    if (json['networkMetrics'] != null) {
+      final nmList = json['networkMetrics'] as List;
+      for (var nm in nmList) {
+        session.networkMetrics.add(NetworkMetric.fromJson(nm));
+      }
+    }
+    
     return session;
   }
 }
