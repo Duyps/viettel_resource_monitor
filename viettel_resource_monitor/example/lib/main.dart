@@ -17,14 +17,8 @@ void main() async {
         maxCpuPercentage: 50,
       ),
       onAlert: (alert) {
-        debugPrint('--- ALERT RECEIVED: $alert');
-        scaffoldMessengerKey.currentState?.showSnackBar(
-          SnackBar(
-            content: Text(alert.message),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        debugPrint('ViettelResourceMonitor: --- ALERT RECEIVED: ${alert.message}');
+        // Cảnh báo đỏ dưới màn hình đã được loại bỏ theo yêu cầu
       }
     ),
   );

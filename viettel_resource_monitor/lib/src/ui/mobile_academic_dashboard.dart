@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../viettel_resource_monitor.dart';
 import '../models/screen_session.dart';
-import 'widgets/light_bar_chart.dart';
-import 'widgets/light_line_chart.dart';
+import '../models/resource_alert.dart';
+import 'tabs/ram_cpu_tab.dart';
+import 'tabs/fps_tab.dart';
+import 'tabs/network_tab.dart';
+import 'tabs/alerts_tab.dart';
 
 class MobileAcademicDashboard extends StatefulWidget {
   const MobileAcademicDashboard({Key? key}) : super(key: key);
@@ -15,23 +18,35 @@ class MobileAcademicDashboard extends StatefulWidget {
 class _MobileAcademicDashboardState extends State<MobileAcademicDashboard> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<ScreenSession> _allSessions = [];
+  final List<ResourceAlert> _alerts = [];
   StreamSubscription? _metricSub;
+  StreamSubscription? _alertSub;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _loadData();
 
     // Auto-refresh when new metrics arrive
     _metricSub = ViettelResourceMonitor.instance.metricStream.listen((_) {
       if (mounted) _loadData();
     });
+
+    // Listen for alerts
+    _alertSub = ViettelResourceMonitor.instance.alertStream.listen((alert) {
+      if (mounted) {
+        setState(() {
+          _alerts.insert(0, alert); // Newest first
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _metricSub?.cancel();
+    _alertSub?.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -63,6 +78,9 @@ class _MobileAcademicDashboardState extends State<MobileAcademicDashboard> with 
 
   void _clearData() async {
     await ViettelResourceMonitor.instance.sessionManager.clearAllData();
+    setState(() {
+      _alerts.clear();
+    });
     _loadData();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xóa dữ liệu cũ!')));
@@ -102,9 +120,10 @@ class _MobileAcademicDashboardState extends State<MobileAcademicDashboard> with 
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildScreenComparisonTab(),
-                  _buildRenderPipelineTab(),
-                  _buildNetworkAnalysisTab(),
+                  RamCpuTab(allSessions: _allSessions),
+                  FpsTab(allSessions: _allSessions),
+                  NetworkTab(allSessions: _allSessions),
+                  AlertsTab(alerts: _alerts),
                 ],
               ),
             ),
@@ -119,134 +138,33 @@ class _MobileAcademicDashboardState extends State<MobileAcademicDashboard> with 
       color: Colors.white,
       child: TabBar(
         controller: _tabController,
+        isScrollable: true,
         labelColor: const Color(0xFFEE0000),
         unselectedLabelColor: Colors.black54,
         indicatorColor: const Color(0xFFEE0000),
-        tabs: const [
-          Tab(text: 'RAM/CPU'),
-          Tab(text: 'FPS Timeline'),
-          Tab(text: 'Network API'),
+        tabAlignment: TabAlignment.start,
+        tabs: [
+          const Tab(text: 'RAM/CPU'),
+          const Tab(text: 'FPS Timeline'),
+          const Tab(text: 'Network API'),
+          Tab(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Cảnh báo'),
+                if (_alerts.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(color: const Color(0xFFEE0000), borderRadius: BorderRadius.circular(10)),
+                    child: Text('${_alerts.length}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                  )
+                ]
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
-
-  Widget _buildScreenComparisonTab() {
-    if (_allSessions.isEmpty) return const Center(child: Text('Chưa có dữ liệu'));
-
-    // Prepare data for Bar Chart
-    List<String> labels = [];
-    List<double> ramValues = [];
-    
-    for (var session in _allSessions.take(5).toList().reversed) {
-      labels.add(session.screenName.replaceAll('Screen', ''));
-      double peakRam = 0;
-      for (var m in session.resourceMetrics) {
-        if (m.memoryUsageMB > peakRam) peakRam = m.memoryUsageMB;
-      }
-      ramValues.add(peakRam);
-    }
-
-    if (ramValues.every((element) => element == 0)) {
-       return const Center(child: Text('Chưa thu thập đủ dữ liệu RAM.'));
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const Text('So sánh Mức tiêu thụ RAM (Max MB)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 8),
-        const Text('Biểu đồ thể hiện màn hình nào ngốn nhiều RAM nhất trong quá trình sử dụng.', style: TextStyle(color: Colors.black54, fontSize: 12)),
-        const SizedBox(height: 24),
-        LightBarChart(
-          labels: labels,
-          values: ramValues,
-          unit: 'MB',
-          color: const Color(0xFFEE0000),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRenderPipelineTab() {
-    if (_allSessions.isEmpty) return const Center(child: Text('Chưa có dữ liệu'));
-
-    List<double> fpsTimeline = [];
-    for (var session in _allSessions) {
-      for (var m in session.resourceMetrics) {
-        fpsTimeline.add(m.fps);
-      }
-    }
-    if (fpsTimeline.length > 50) {
-      fpsTimeline = fpsTimeline.sublist(fpsTimeline.length - 50); // Only show last 50 data points for clarity
-    }
-
-    if (fpsTimeline.isEmpty) {
-      return const Center(child: Text('Đang thu thập dữ liệu FPS...'));
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const Text('Theo dõi Tốc độ khung hình (FPS)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 8),
-        const Text('Biểu đồ đường ghi nhận FPS theo dòng thời gian. Ngưỡng dưới 30 FPS cảnh báo đỏ.', style: TextStyle(color: Colors.black54, fontSize: 12)),
-        const SizedBox(height: 24),
-        LightLineChart(
-          data: fpsTimeline,
-          color: Colors.blueAccent,
-          threshold: 30.0, // Alert threshold at 30 FPS
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNetworkAnalysisTab() {
-    final allRequests = _allSessions.expand((s) => s.networkMetrics).toList();
-    allRequests.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text('Độ trễ API & Network Data', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        ),
-        Expanded(
-          child: allRequests.isEmpty
-              ? const Center(child: Text('Chưa có yêu cầu mạng nào được ghi nhận.'))
-              : ListView.separated(
-                  itemCount: allRequests.length,
-                  separatorBuilder: (ctx, idx) => const Divider(height: 1),
-                  itemBuilder: (ctx, idx) {
-                    final req = allRequests[idx];
-                    final isSlow = req.durationMilliseconds > 2000;
-                    return ListTile(
-                      tileColor: Colors.white,
-                      leading: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: isSlow ? const Color(0xFFEE0000).withOpacity(0.1) : Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(req.method, style: TextStyle(color: isSlow ? const Color(0xFFEE0000) : Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
-                      ),
-                      title: Text(req.url, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                      subtitle: Text('${req.statusCode} • Payload: ${req.responseSizeBytes}B', style: const TextStyle(fontSize: 11)),
-                      trailing: Text(
-                        '${req.durationMilliseconds}ms',
-                        style: TextStyle(
-                          color: isSlow ? const Color(0xFFEE0000) : Colors.black87,
-                          fontWeight: isSlow ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-
-
 }
