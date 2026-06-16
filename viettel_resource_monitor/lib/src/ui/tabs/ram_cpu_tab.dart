@@ -18,12 +18,12 @@ class RamCpuTab extends StatelessWidget {
       );
     }
 
-    // Định nghĩa màu sắc tối giản hệ thống Viettel DMS
     const viettelRed = Color(0xFFEE0000);
     const cpuBlue = Color(0xFF3B82F6);
     const grayBorder = Color(0xFFE5E7EB);
+    const textDark = Color(0xFF1F2937);
 
-    // Xử lý và nhóm số liệu thống kê cho từng màn hình riêng biệt (Mục 5 đề tài)
+    // 1. TỔNG HỢP DỮ LIỆU
     final Map<String, _ScreenSummaryData> summaryMap = {};
 
     for (var session in allSessions) {
@@ -43,7 +43,6 @@ class RamCpuTab extends StatelessWidget {
       double avgCpu = totalCpu / session.resourceMetrics.length;
 
       if (summaryMap.containsKey(cleanName)) {
-        // Nếu trùng tên màn hình (ở phiên khác), lấy giá trị đỉnh cao nhất
         final existing = summaryMap[cleanName]!;
         summaryMap[cleanName] = _ScreenSummaryData(
           screenName: cleanName,
@@ -67,47 +66,33 @@ class RamCpuTab extends StatelessWidget {
       return const Center(child: Text('Chưa thu thập đủ chỉ số tài nguyên.'));
     }
 
-    // Tìm giá trị lớn nhất toàn cục để tính toán tỷ lệ % độ dài thanh bar ngang
-    double globalMaxRam = displayList
-        .map((e) => e.maxRam)
-        .reduce((a, b) => a > b ? a : b);
+    // 2. TÌM GIÁ TRỊ LỚN NHẤT LÀM THANG ĐO CHIỀU NGANG BIỂU ĐỒ (TRỤC X)
+    double globalMaxRam = displayList.map((e) => e.maxRam).reduce((a, b) => a > b ? a : b);
+    double globalMaxCpu = displayList.map((e) => e.maxCpu).reduce((a, b) => a > b ? a : b);
+    
     if (globalMaxRam == 0) globalMaxRam = 1;
+    if (globalMaxCpu == 0) globalMaxCpu = 1;
 
-    // HIỂN THỊ CONSOLE LOG CHI TIẾT THEO YÊU CẦU CỦA USER
-    debugPrint('\n════════════════════ [BÁO CÁO PHÂN TÍCH RAM/CPU] ════════════════════');
-    debugPrint('Tổng số màn hình phân tích: ${displayList.length}');
-    for (var data in displayList) {
-      final double ramRatio = data.maxRam / globalMaxRam;
-      final int barLength = (ramRatio * 20).round(); // Độ dài thanh bar trong console
-      final String bar = '█' * barLength + '░' * (20 - barLength);
-      
-      debugPrint(' 📱 Màn hình: ${data.screenName.padRight(15)}');
-      debugPrint('    RAM Đỉnh:   [${bar}] ${data.maxRam.toStringAsFixed(1)} MB');
-      debugPrint('    CPU:        Đỉnh: ${data.maxCpu.toStringAsFixed(1)}% | Trung bình: ${data.avgCpu.toStringAsFixed(1)}%');
-      debugPrint('  -------------------------------------------------------------------');
-    }
-    debugPrint('═════════════════════════════════════════════════════════════════════\n');
+    // Dành thêm 10% khoảng trống cuối biểu đồ cho đẹp
+    final maxRamScale = globalMaxRam * 1.1; 
+    final maxCpuScale = globalMaxCpu * 1.1;
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       children: [
-        // 1. Khối tiêu đề phân tích
+        // Tiêu đề
         const Text(
-          'Phân tích & So sánh theo Màn hình',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: Color(0xFF1F2937),
-          ),
+          'Phân tích Phụ tải Hệ thống',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: textDark),
         ),
         const SizedBox(height: 4),
         const Text(
-          'So sánh mức tiêu thụ RAM đỉnh (Peak) giữa các giao diện ứng dụng.',
+          'Biểu đồ cột ngang (Horizontal Bar Chart) so sánh mức tiêu thụ tài nguyên phần cứng cực đại giữa các giao diện.',
           style: TextStyle(color: Colors.black54, fontSize: 12),
         ),
         const SizedBox(height: 24),
 
-        // 2. KHU VỰC BIỂU ĐỒ ĐƯỜNG NGANG CHUYÊN CHO DI ĐỘNG (Dễ so sánh nhất)
+        // BIỂU ĐỒ CỘT NGANG (HORIZONTAL GROUPED BAR CHART)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -116,81 +101,112 @@ class RamCpuTab extends StatelessWidget {
             border: Border.all(color: grayBorder, width: 1),
           ),
           child: Column(
-            children: displayList.map((data) {
-              // Tính toán độ dài thanh phần trăm dựa trên giá trị RAM đỉnh
-              final double ramRatio = data.maxRam / globalMaxRam;
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Legend
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _buildLegendItem('RAM Đỉnh (MB)', viettelRed),
+                  const SizedBox(width: 16),
+                  _buildLegendItem('CPU Đỉnh (%)', cpuBlue),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              // Trục vẽ biểu đồ
+              ...displayList.map((data) {
+                // Tỷ lệ cho cột
+                final double ramRatio = data.maxRam / maxRamScale;
+                final double cpuRatio = data.maxCpu / maxCpuScale;
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Trục Y: Nhãn Tên màn hình
+                      SizedBox(
+                        width: 90,
+                        child: Text(
                           data.screenName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                            color: Color(0xFF374151),
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Color(0xFF374151)),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          '${data.maxRam.toStringAsFixed(0)} MB',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    // Thanh Bar ngang tối giản thể hiện dung lượng
-                    Stack(
-                      children: [
-                        Container(
-                          height: 8,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3F4F6),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        FractionallySizedBox(
-                          widthFactor: ramRatio.clamp(
-                            0.05,
-                            1.0,
-                          ), // Đảm bảo thanh luôn hiển thị ít nhất 5% để nhìn thấy màu
-                          child: Container(
-                            height: 8,
-                            decoration: BoxDecoration(
-                              // Đỏ Viettel chuẩn, không dùng gradient cầu kỳ
-                              color: viettelRed,
-                              borderRadius: BorderRadius.circular(4),
+                      ),
+                      const SizedBox(width: 12),
+                      
+                      // Trục X: Các thanh Bar
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Cột RAM (Màu đỏ)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FractionallySizedBox(
+                                    alignment: Alignment.centerLeft,
+                                    widthFactor: ramRatio.clamp(0.01, 1.0),
+                                    child: Container(
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: viettelRed,
+                                        borderRadius: const BorderRadius.only(topRight: Radius.circular(4), bottomRight: Radius.circular(4)),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${data.maxRam.toStringAsFixed(0)}',
+                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade700, fontFeatures: const [FontFeature.tabularFigures()]),
+                                ),
+                              ],
                             ),
-                          ),
+                            const SizedBox(height: 4), // Khoảng cách giữa 2 cột trong cùng nhóm
+                            
+                            // Cột CPU (Màu xanh)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FractionallySizedBox(
+                                    alignment: Alignment.centerLeft,
+                                    widthFactor: cpuRatio.clamp(0.01, 1.0),
+                                    child: Container(
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: cpuBlue,
+                                        borderRadius: const BorderRadius.only(topRight: Radius.circular(4), bottomRight: Radius.circular(4)),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${data.maxCpu.toStringAsFixed(1)}%',
+                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade700, fontFeatures: const [FontFeature.tabularFigures()]),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ],
           ),
         ),
 
         const SizedBox(height: 28),
 
-        // 3. KHU VỰC BẢNG SỐ LIỆU ĐỐI CHIẾU CHI TIẾT (Dùng cho Báo cáo / Slide thực tập)
+        // BẢNG SỐ LIỆU ĐỐI CHIẾU CHI TIẾT
         const Text(
-          'Bảng chi tiết chỉ số phụ tải (RAM & CPU)',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            color: Color(0xFF1F2937),
-          ),
+          'Bảng chi tiết thông số',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: textDark),
         ),
         const SizedBox(height: 12),
 
@@ -204,34 +220,47 @@ class RamCpuTab extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             child: Table(
               columnWidths: const {
-                0: FlexColumnWidth(
-                  2.5,
-                ), // Tên màn hình chiếm nhiều khoảng trống nhất
-                1: FlexColumnWidth(1.5),
-                2: FlexColumnWidth(1.5),
+                0: FlexColumnWidth(2.0), 
+                1: FlexColumnWidth(1.2),
+                2: FlexColumnWidth(1.2),
+                3: FlexColumnWidth(1.2),
               },
               border: const TableBorder(
                 horizontalInside: BorderSide(color: grayBorder, width: 1),
+                verticalInside: BorderSide(color: Color(0xFFF3F4F6), width: 1),
               ),
               children: [
-                // Hàng Tiêu Đề Bảng
+                // Header
                 TableRow(
                   decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
                   children: [
                     _buildTableCell('Màn hình', isHeader: true),
                     _buildTableCell('RAM Đỉnh', isHeader: true),
-                    _buildTableCell('CPU Đỉnh / Avg', isHeader: true),
+                    _buildTableCell('CPU Đỉnh', isHeader: true),
+                    _buildTableCell('CPU TB', isHeader: true),
                   ],
                 ),
-                // Các hàng dữ liệu
+                // Data
                 ...displayList.map((data) {
                   return TableRow(
                     children: [
                       _buildTableCell(data.screenName),
-                      _buildTableCell('${data.maxRam.toStringAsFixed(0)} MB'),
                       _buildTableCell(
-                        '${data.maxCpu.toStringAsFixed(0)}% / ${data.avgCpu.toStringAsFixed(0)}%',
+                        '${data.maxRam.toStringAsFixed(0)}',
+                        isBold: true,
+                        color: viettelRed,
+                        suffix: ' MB',
+                      ),
+                      _buildTableCell(
+                        '${data.maxCpu.toStringAsFixed(1)}',
+                        isBold: true,
                         color: cpuBlue,
+                        suffix: ' %',
+                      ),
+                      _buildTableCell(
+                        '${data.avgCpu.toStringAsFixed(1)}',
+                        color: Colors.grey.shade700,
+                        suffix: ' %',
                       ),
                     ],
                   );
@@ -244,25 +273,53 @@ class RamCpuTab extends StatelessWidget {
     );
   }
 
-  Widget _buildTableCell(String text, {bool isHeader = false, Color? color}) {
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF4B5563), fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+
+  Widget _buildTableCell(
+    String text, {
+    bool isHeader = false,
+    Color? color,
+    bool isBold = false,
+    String suffix = '',
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: isHeader ? FontWeight.w700 : FontWeight.w500,
-          color: isHeader
-              ? const Color(0xFF4B5563)
-              : (color ?? const Color(0xFF1F2937)),
-          fontFeatures: isHeader ? null : const [FontFeature.tabularFigures()],
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      child: RichText(
+        textAlign: isHeader ? TextAlign.left : TextAlign.start,
+        text: TextSpan(
+          text: text,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: isHeader ? FontWeight.w700 : (isBold ? FontWeight.bold : FontWeight.w500),
+            color: isHeader ? const Color(0xFF4B5563) : (color ?? const Color(0xFF1F2937)),
+            fontFeatures: isHeader ? null : const [FontFeature.tabularFigures()],
+          ),
+          children: [
+            if (suffix.isNotEmpty)
+              TextSpan(
+                text: suffix,
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.normal, color: Colors.grey.shade500),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-// Lớp lưu trữ cấu trúc dữ liệu nội bộ phục vụ tính toán thống kê phân tích
 class _ScreenSummaryData {
   final String screenName;
   final double maxRam;
