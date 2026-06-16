@@ -20,25 +20,36 @@ class ViettelResourceMonitorPlugin: FlutterPlugin, MethodCallHandler {
 
   override fun onMethodCall(call: MethodCall, result: Result) {
     if (call.method == "getCpuUsage") {
-      val currentCpuTime = Process.getElapsedCpuTime()
+      val reader = java.io.BufferedReader(java.io.FileReader("/proc/self/stat"))
+      val stat = reader.readLine()
+      reader.close()
+      val stats = stat.split(" ")
+      val utime = stats[13].toLong()
+      val stime = stats[14].toLong()
+      val cutime = stats[15].toLong()
+      val cstime = stats[16].toLong()
+
+      val totalCpuTime = utime + stime + cutime + cstime
       val currentUptime = SystemClock.elapsedRealtime()
 
       if (lastCpuTime == 0L || lastUptime == 0L) {
-        lastCpuTime = currentCpuTime
+        lastCpuTime = totalCpuTime
         lastUptime = currentUptime
         result.success(0.0)
         return
       }
 
-      val cpuDiff = currentCpuTime - lastCpuTime
+      val cpuDiff = totalCpuTime - lastCpuTime
       val uptimeDiff = currentUptime - lastUptime
 
       if (uptimeDiff > 0) {
-        val cpuUsage = (cpuDiff.toDouble() / uptimeDiff.toDouble()) * 100.0
+        val clockTicksPerSecond = android.system.Os.sysconf(android.system.OsConstants._SC_CLK_TCK).toDouble()
+        // cpuDiff is in clock ticks. uptimeDiff is in milliseconds.
+        val cpuUsage = (cpuDiff / clockTicksPerSecond) / (uptimeDiff / 1000.0) * 100.0
         val cores = Runtime.getRuntime().availableProcessors()
         val finalUsage = cpuUsage / cores
         
-        lastCpuTime = currentCpuTime
+        lastCpuTime = totalCpuTime
         lastUptime = currentUptime
         
         result.success(finalUsage)

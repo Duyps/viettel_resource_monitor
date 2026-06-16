@@ -7,7 +7,7 @@ class ViettelCpuTracker {
     try {
       final double usage = await _channel.invokeMethod('getCpuUsage') ?? 0.0;
       return usage;
-    } on PlatformException {
+    } catch (e) {
       return 0.0;
     }
   }
